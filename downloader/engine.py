@@ -94,6 +94,11 @@ class DownloadProcess(QObject):
                 self.job.title = str(json.loads(line.removeprefix("__YTDL_TITLE__")))
                 self.job.progress = 0
                 self.job.detail = "Preparing next file…"
+            elif line.startswith("__YTDL_QUALITY__"):
+                value = json.loads(line.removeprefix("__YTDL_QUALITY__"))
+                self.job.resolution = value[:64] if isinstance(value, str) and value not in {"NA", "None"} else ""
+                if self.job.resolution:
+                    self.append_log("Selected resolution: " + self.job.resolution)
             elif line.startswith("__YTDL_PROCESS__"):
                 self.job.status, self.job.detail = "Processing", "Merging audio and video / finalizing file…"
             elif line.startswith("__YTDL_FILE__"):

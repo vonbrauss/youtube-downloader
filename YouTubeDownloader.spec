@@ -38,8 +38,8 @@ app = BUNDLE(
     icon=str(root / 'assets' / 'icon.icns'),
     bundle_identifier='local.youtube-downloader.desktop',
     info_plist={
-        'CFBundleShortVersionString': '0.1.0',
-        'CFBundleVersion': '1',
+        'CFBundleShortVersionString': '0.1.1',
+        'CFBundleVersion': '2',
         'NSHighResolutionCapable': True,
         'LSMinimumSystemVersion': minimum_macos,
         'NSHumanReadableCopyright': 'YouTube Downloader — local desktop application',
