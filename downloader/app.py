@@ -17,7 +17,7 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName("YouTube Downloader")
     app.setOrganizationName("Local Desktop")
-    app.setApplicationVersion("0.1.0")
+    app.setApplicationVersion("0.1.1")
     app.setFont(QFont(".AppleSystemUIFont", 13))
     app.setStyle("Fusion")
     app.setStyleSheet(STYLE)

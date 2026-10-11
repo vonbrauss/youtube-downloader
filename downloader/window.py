@@ -38,6 +38,10 @@ class JobRow(QFrame):
         self.title.setTextFormat(Qt.TextFormat.PlainText)
         self.title.setStyleSheet("font-weight: 600; font-size: 14px;")
         top.addWidget(self.title, 1)
+        self.quality = QLabel()
+        self.quality.setObjectName("badge")
+        self.quality.setToolTip("The resolution selected by yt-dlp for the current video")
+        top.addWidget(self.quality)
         self.badge = QLabel()
         self.badge.setObjectName("badge")
         top.addWidget(self.badge)
@@ -62,7 +66,9 @@ class JobRow(QFrame):
         self.refresh()
 
     def refresh(self):
-        width = max(240, self.width() - 320)
+        self.quality.setText("Selected " + self.job.resolution.replace("x", "×"))
+        self.quality.setVisible(bool(self.job.resolution))
+        width = max(200, self.width() - (475 if self.job.resolution else 320))
         self.title.setText(self.title.fontMetrics().elidedText(self.job.title or self.job.url, Qt.TextElideMode.ElideRight, width))
         self.title.setToolTip(self.job.title or self.job.url)
         self.source.setText(self.source.fontMetrics().elidedText(self.job.url, Qt.TextElideMode.ElideRight, max(400, self.width() - 40)))

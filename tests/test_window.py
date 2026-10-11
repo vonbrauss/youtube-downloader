@@ -4,11 +4,11 @@ import subprocess
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialog
 
-from downloader.model import Settings, Storage
+from downloader.model import Job, Settings, Storage
 from downloader.settings_dialog import SettingsDialog
 from downloader.system import ToolStatus, find_tool
 from downloader.theme import STYLE
-from downloader.window import MainWindow
+from downloader.window import JobRow, MainWindow
 
 
 def test_window_queue_and_settings(app, tmp_path):
@@ -46,3 +46,11 @@ def test_settings_option_search_and_round_trip(app, tmp_path):
     dialog.save()
     assert dialog.result() == QDialog.DialogCode.Accepted
     assert dialog.result_settings.destination == str(tmp_path)
+
+
+def test_queue_row_displays_selected_resolution(app):
+    row = JobRow(Job("https://example.com", resolution="1920x1080"))
+    row.show()
+    app.processEvents()
+    assert row.quality.text() == "Selected 1920×1080"
+    assert row.quality.isVisible()
