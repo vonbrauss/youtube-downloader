@@ -32,6 +32,7 @@ def fake(tmp_path):
 import json, pathlib, sys, time
 url = sys.argv[-1]
 print('__YTDL_TITLE__' + json.dumps('A test video'), flush=True)
+print('__YTDL_QUALITY__' + json.dumps('1920x1080'), flush=True)
 if url.endswith('/slow'):
     time.sleep(60)
 elif url.endswith('/fail'):
@@ -60,6 +61,8 @@ def test_parallel_queue_and_failures(app, fake, tmp_path):
     wait_until(app, lambda: not controller.running and not controller.workers)
     assert max(observed) == 2
     assert all(j.status == "Completed" and len(j.files) == 1 for j in jobs[:5])
+    assert all(j.resolution == "1920x1080" for j in jobs[:5])
+    assert "Selected resolution: 1920x1080" in jobs[0].log
     assert jobs[5].status == "Failed"
     assert jobs[5].detail == "Intentional download failure"
     assert jobs[6].status == "Finished" and jobs[6].files == []
@@ -108,9 +111,22 @@ def test_real_system_downloader_with_local_media(app, tmp_path):
         assert job.title == "sample"
         assert len(job.files) == 1 and Path(job.files[0]).stat().st_size > 1000
         assert job.progress == 100
+        # The generic direct-file extractor has no dimensions until ffprobe reads
+        # the media; do not invent a selected resolution when yt-dlp reports none.
+        assert job.resolution == ""
         metadata = subprocess.check_output([find_tool("ffprobe"), "-v", "error", "-show_entries", "stream=codec_type", "-of", "json", job.files[0]], text=True)
         assert '"video"' in metadata and '"audio"' in metadata
     finally:
         server.shutdown()
         server.server_close()
         thread.join(timeout=2)
+
+
+def test_resolution_output_is_not_a_download_success(app, tmp_path):
+    job = Job("https://example.com")
+    worker = DownloadProcess(job, "/unused", Settings(destination=str(tmp_path)))
+    worker.parse_line('__YTDL_QUALITY__"1920x1080"')
+    assert job.resolution == "1920x1080"
+    worker.complete(0, QProcess.ExitStatus.NormalExit)
+    assert job.status == "Finished"
+    assert not job.files

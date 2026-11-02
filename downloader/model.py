@@ -100,6 +100,13 @@ def build_arguments(settings: Settings, url: str) -> list[str]:
             if not Path(settings.cookie_file).expanduser().is_file():
                 raise ValueError("Choose an existing Netscape cookies file in Settings → Cookies.")
             args += ["--cookies", str(Path(settings.cookie_file).expanduser())]
+        if settings.cookie_source != "None":
+            # Authenticated default clients can expose only a 360p combined stream
+            # under YouTube's SABR experiment. Keep the defaults (including private
+            # and restricted content support) and add the cookie-compatible HLS
+            # client. This argument affects only YouTube, never other extractors.
+            # Native advanced extractor arguments come last and can override it.
+            args += ["--extractor-args", "youtube:player_client=default,web_safari"]
         if settings.subtitles:
             args += ["--write-subs", "--sub-langs", settings.subtitle_languages]
         if settings.auto_subtitles:
@@ -123,6 +130,7 @@ def build_arguments(settings: Settings, url: str) -> list[str]:
              "--progress-template", 'download:__YTDL_PROGRESS__{"status":%(progress.status)j,"downloaded":%(progress.downloaded_bytes)j,"total":%(progress.total_bytes)j,"estimate":%(progress.total_bytes_estimate)j,"speed":%(progress.speed)j,"eta":%(progress.eta)j}',
              "--progress-template", "postprocess:__YTDL_PROCESS__%(progress.status)j",
              "--print", "before_dl:__YTDL_TITLE__%(title)j",
+             "--print", "before_dl:__YTDL_QUALITY__%(resolution)j",
              "--print", "after_move:__YTDL_FILE__%(filepath)j"]
     # Advanced options deliberately come last, so every native option is available.
     args += extra + ["--", url]
@@ -150,6 +158,7 @@ class Job:
     progress: float = 0.0
     detail: str = "Ready when you are"
     files: list[str] = field(default_factory=list)
+    resolution: str = ""
     log: deque[str] = field(default_factory=lambda: deque(maxlen=600), repr=False)
 
     def to_dict(self) -> dict:
@@ -163,7 +172,7 @@ class Job:
         result = cls(**{k: v for k, v in data.items() if k in known})
         if not isinstance(result.url, str) or not isinstance(result.id, str) or not result.id:
             raise ValueError("Invalid queue entry")
-        if any(not isinstance(getattr(result, key), str) for key in ("title", "status", "detail")):
+        if any(not isinstance(getattr(result, key), str) for key in ("title", "status", "detail", "resolution")):
             raise ValueError("Invalid queue text")
         if not isinstance(result.files, list) or any(not isinstance(path, str) for path in result.files):
             raise ValueError("Invalid saved file list")

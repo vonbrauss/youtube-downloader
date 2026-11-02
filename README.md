@@ -57,6 +57,10 @@ Open **Settings → Cookies** and choose Browser or Cookie file. Supported brows
 
 The app stores only browser selections and cookie-file paths. yt-dlp reads the cookies when a download starts. Browser permissions, Keychain access, protected cookie databases and site authentication may affect availability. A cookies file must be in Netscape format. No cookies are read during the startup tool check.
 
+For YouTube downloads using cookies, the app supplements yt-dlp's default clients with `web_safari`. This makes HLS HD formats available when authenticated default clients expose only low-resolution streams under YouTube's SABR experiment. It preserves browser authentication and leaves other sites' extractors alone. Advanced `--extractor-args` can override the default, and advanced-only mode bypasses it. Each queue row shows yt-dlp's selected resolution; it is also recorded in Details.
+
+The 0.1.1 fix was verified against `YYyao6r2kaw` using Chrome cookies: the original command selected 640×360; the corrected command selected 1920×1080, and a short downloaded sample contained 1080p video and audio. Already existing media files are still preserved. To replace an earlier low-resolution download, move or rename it before downloading that link again.
+
 ## Every yt-dlp option
 
 **Settings → All yt-dlp options** loads searchable, categorized help directly from the installed external `yt-dlp --help`, including newly introduced options. Select an option, enter its argument(s), and click **Add option**, or type/paste native CLI arguments directly. Quote values containing spaces. Multi-argument options accept multiple quoted values.
@@ -81,7 +85,7 @@ Writes are atomic, use owner-only file permissions and retain a `.backup` copy. 
 .venv/bin/python -m pytest -q
 ```
 
-Tests cover argument construction, browser syntax, the complete live option catalog, recovery, parallel scheduling, failures, pause/cancel, missing executables, update/install routing and Homebrew outages. An integration test creates a tiny local video with audio, serves it locally, downloads it through the real system yt-dlp and verifies the saved audio/video with ffprobe. A live YouTube metadata/format extraction check also succeeded for “Me at the zoo” without accessing browser cookies. Browser authentication depends on your accounts and permissions and has not been exercised. Packaging smoke checks open the actual bundled app without updating system tools or changing real user data (`--smoke-test`).
+Tests cover argument construction, browser syntax, the complete live option catalog, recovery, parallel scheduling, failures, pause/cancel, missing executables, update/install routing and Homebrew outages. An integration test creates a tiny local video with audio, serves it locally, downloads it through the real system yt-dlp and verifies the saved audio/video with ffprobe. A live YouTube metadata/format extraction check also succeeded for “Me at the zoo” without accessing browser cookies. The cookie-enabled HD regression was verified using the app's actual download engine and the sample clip described above; a saved sample had 1920×1080 video and audio. Cookie-dependent behavior varies with your account and permissions. Packaging smoke checks open the actual bundled app without updating system tools or changing real user data (`--smoke-test`).
 
 ## References
 

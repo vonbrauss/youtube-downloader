@@ -11,3 +11,13 @@ dist/
 !.env.example
 cookies.txt
 *.cookies.txt
+
+# Local settings and private data
+.idea/
+.DS_Store
+.pytest_cache/
+.env
+.env.*
+!.env.example
+cookies.txt
+*.cookies.txt

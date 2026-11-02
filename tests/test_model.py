@@ -47,6 +47,27 @@ def test_cookies_and_no_shell_interpolation(tmp_path):
         build_arguments(Settings(cookie_source="Cookie file", cookie_file=str(tmp_path / "missing")), "https://example.com")
 
 
+def test_cookie_downloads_keep_default_clients_and_expose_hls_hd(tmp_path):
+    url = "https://www.youtube.com/watch?v=YYyao6r2kaw"
+    browser_args = build_arguments(Settings(cookie_source="Browser"), url)
+    assert browser_args[browser_args.index("--extractor-args") + 1] == "youtube:player_client=default,web_safari"
+    assert "--cookies-from-browser" in browser_args
+    cookie_file = tmp_path / "cookies.txt"
+    cookie_file.write_text("# Netscape HTTP Cookie File\n")
+    file_args = build_arguments(Settings(cookie_source="Cookie file", cookie_file=str(cookie_file)), url)
+    assert "youtube:player_client=default,web_safari" in file_args
+    assert "--extractor-args" not in build_arguments(Settings(), url)
+    assert "--extractor-args" not in build_arguments(Settings(cookie_source="Browser", only_extra=True), url)
+    override = build_arguments(Settings(cookie_source="Browser", extra='--extractor-args "youtube:player_client=web"'), url)
+    assert override[-4:] == ["--extractor-args", "youtube:player_client=web", "--", url]
+
+
+def test_selected_resolution_survives_queue_recovery():
+    job = Job("https://example.com", resolution="1920x1080")
+    assert Job.from_dict(job.to_dict()).resolution == "1920x1080"
+    assert Job.from_dict({"url": "https://example.com"}).resolution == ""
+
+
 def test_links_and_recovery(tmp_path):
     links, bad = parse_links("https://youtu.be/a\nhttps://youtu.be/a\n--exec http:// https://example.com/watch?v=x&list=y")
     assert links == ["https://youtu.be/a", "https://example.com/watch?v=x&list=y"]
